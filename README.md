@@ -58,11 +58,11 @@ Usage of af:
 
 The AF logic is described as two states machine:
 
-![af_logic](./images/af.svg)
+![af_logic](./docs/images/af.svg)
 
 ## Sample output
 
 Below video shows a demo of dynamic provisioned 5G QoS driven by face detection.
 
-[![facedetection_af](./images/fd-af.png)](http://weip-bj.bj.intel.com/facedetection-af.mp4)
+[![facedetection_af](./docs/images/fd-af.png)](http://weip-bj.bj.intel.com/facedetection-af.mp4)
 
