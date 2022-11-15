@@ -1,0 +1,13 @@
+{
+    "NotificationDestination": "http://localhost/nef_notify",
+    "FlowInfo": [
+        {
+            "FlowId":   1,
+            "FlowDescriptions": [
+                "permit inout ip from any to assigned"
+            ]
+        }
+    ],
+    "QosReference": "Video Call",
+    "UeIpv4Addr": "172.250.0.1"
+}
