@@ -30,7 +30,7 @@ const (
 func producer(fifoFile string, ch chan []byte) error {
 
 	// Open pipe for read only
-	fmt.Println("Starting read operation")
+	fmt.Printf("Starting read from fifo %s\n", fifoFile)
 	pipe, err := os.OpenFile(fifoFile, os.O_RDONLY, 0640)
 	if err != nil {
 		return fmt.Errorf("couldn't open pipe with error: %+v", err)
@@ -70,7 +70,8 @@ func consumer(ch chan []byte, inactiveTime uint, nefSvcEndpoint string, nefJson 
 			json.Unmarshal(line, &meta)
 			//fmt.Printf("%+v\n", meta)
 			if state == NORMAL {
-				fmt.Printf("Object detected=>Fire NEF Post\n")
+				t := time.Now()
+				fmt.Printf("%s: Object detected=>Fire NEF Post\n", t.Format("2006-01-02 15:04:05"))
 				postRequest := client.AsSessionWithQoSAPISubscriptionLevelPOSTOperationApi.ScsAsIdSubscriptionsPost(context.Background(), scsAsId)
 				postRequest = postRequest.AsSessionWithQoSSubscription(req)
 				_, http_response, err := postRequest.Execute()
@@ -78,16 +79,17 @@ func consumer(ch chan []byte, inactiveTime uint, nefSvcEndpoint string, nefJson 
 					fmt.Printf("http_response: %+v, err: %+v\n", http_response, err)
 				} else {
 					loc := http_response.Header["Location"][0]
-					fmt.Printf("%+v created\n", loc)
+					fmt.Printf("    %+v created\n", loc)
 					ls := strings.Split(loc, "/")
 					subId = ls[len(ls)-1]
 				}
 				state = CRITICAL
 			}
-			timer = time.NewTimer(5 * time.Second)
+			timer = time.NewTimer(time.Duration(inactiveTime) * time.Second)
 		case <-timer.C:
 			if state == CRITICAL {
-				fmt.Printf("No object detected for %d secs=>Fire NEF Del\n", inactiveTime)
+				t := time.Now()
+				fmt.Printf("%s: No object detected for %d secs=>Fire NEF Del\n", t.Format("2006-01-02 15:04:05"), inactiveTime)
 				deleteRequest := client.AsSessionWithQoSAPISubscriptionLevelDELETEOperationApi.ScsAsIdSubscriptionsSubscriptionIdDelete(context.Background(), scsAsId, subId)
 				_, http_response, err := deleteRequest.Execute()
 				if err != nil {
@@ -108,7 +110,9 @@ func main() {
 	scsAsId := flag.String("scsAsId", "facedetection", "Application ID")
 
 	flag.Parse()
-	fmt.Printf("STARTED %s\n", *fifoFile)
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+	flag.PrintDefaults()
+
 	ch := make(chan []byte)
 	go consumer(ch, *inactiveTime, *nefSvcEndpoint, *nefJson, *ueIpv4, *scsAsId)
 	err := producer(*fifoFile, ch)
