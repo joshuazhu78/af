@@ -49,14 +49,22 @@ AF function usage is as below:
 
 ```
 Usage of af:
+  -captureDir string
+    	directory to save captured picture (default "./capture")
+  -capturePeriod uint
+    	capture period in seconds (default 5)
   -fifoFile string
-        fifo filename (default "/tmp/output.json")
-  -inactiveTimer uint
-        Inactive length before firing NEF delete (default 10)
+    	fifo filename (default "/tmp/output.json")
+  -inactiveTime uint
+    	inactive length before firing NEF delete (default 30)
   -nefJson string
-        NEF post json for QoS provisioning
+    	NEF post json for QoS provisioning (default "nef-modify.json")
   -nefSvcEndpoint string
-        NEF service endpoint
+    	NEF service endpoint
+  -scsAsId string
+    	application ID (default "facedetection")
+  -ueIpv4 string
+    	UE IPv4 address (default "172.250.0.1")
 ```
 
 The AF logic is described as two states machine:
