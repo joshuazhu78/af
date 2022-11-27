@@ -55,25 +55,29 @@ func producer(fifoFile string, ch chan []byte) error {
 func consumer(ch chan []byte, inactiveTime uint, evtHandlers []evthandler.EvtHandler) {
 	state := NORMAL
 	timer := time.NewTimer(time.Duration(inactiveTime) * time.Second)
+	metaChans := make([]chan util.GvaMeta, len(evtHandlers))
 	for {
 		select {
 		case line := <-ch:
 			meta := util.GvaMeta{}
 			json.Unmarshal(line, &meta)
-			//fmt.Printf("%+v\n", meta)
 			if state == NORMAL {
 				log.Println("Object detected")
-				for _, evtHandler := range evtHandlers {
-					go evtHandler.OnFaceDetected(meta)
+				for i, evtHandler := range evtHandlers {
+					metaChans[i] = make(chan util.GvaMeta)
+					go evtHandler.OnFaceDetected(metaChans[i])
 				}
 				state = CRITICAL
+			}
+			for _, metaChan := range metaChans {
+				metaChan <- meta
 			}
 			timer = time.NewTimer(time.Duration(inactiveTime) * time.Second)
 		case <-timer.C:
 			if state == CRITICAL {
 				log.Printf("No object detected for %d secs", inactiveTime)
 				for _, evtHandler := range evtHandlers {
-					err := evtHandler.OnDeactivated(inactiveTime)
+					err := evtHandler.OnDeactivated()
 					if err != nil {
 						log.Printf("%+v", err)
 					}

@@ -3,7 +3,7 @@ package evthandler
 import "github.com/joshuazhu78/af/pkg/util"
 
 type EvtHandler interface {
-	OnFaceDetected(meta util.GvaMeta) error
+	OnFaceDetected(metaChan chan util.GvaMeta) error
 
-	OnDeactivated(inactiveTime uint) error
+	OnDeactivated() error
 }

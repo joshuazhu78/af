@@ -23,32 +23,33 @@ func NewCapEventHandler(captureDir string, capturePeriod uint) EvtHandler {
 	}
 }
 
-func (e CapEvtHandler) OnFaceDetected(meta util.GvaMeta) error {
-	err := e.captureOne()
-	if err != nil {
-		return err
-	}
-	ticker := time.NewTicker(time.Duration(e.capturePeriod) * time.Second)
+func (e CapEvtHandler) OnFaceDetected(metaChan chan util.GvaMeta) error {
+	t := time.Now()
+	t = t.Add(time.Duration(-e.capturePeriod) * time.Second)
+	var err error
 	for {
 		select {
 		case <-e.done:
-			ticker.Stop()
 			return nil
-		case <-ticker.C:
-			err := e.captureOne()
-			if err != nil {
-				return err
+		case <-metaChan:
+			tNow := time.Now()
+			d := tNow.Sub(t)
+			if d.Seconds() >= float64(e.capturePeriod) {
+				t, err = e.captureOne()
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 }
 
-func (e CapEvtHandler) OnDeactivated(inactiveTime uint) error {
+func (e CapEvtHandler) OnDeactivated() error {
 	e.done <- true
 	return nil
 }
 
-func (e CapEvtHandler) captureOne() error {
+func (e CapEvtHandler) captureOne() (time.Time, error) {
 	t := time.Now()
 	filename := fmt.Sprintf("%s/%s.png", e.captureDir, t.Format("2006-01-02-15-04-05"))
 	cmd := exec.Command("magick", "import", "-window", "gst-launch-1.0", filename)
@@ -56,8 +57,8 @@ func (e CapEvtHandler) captureOne() error {
 
 	if err != nil {
 		log.Println(err)
-		return err
+		return t, err
 	}
 	log.Printf("%s saved", filename)
-	return nil
+	return t, nil
 }

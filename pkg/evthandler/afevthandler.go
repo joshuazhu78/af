@@ -31,31 +31,34 @@ func NewAfEventHandler(nefSvcEndpoint string, nefJson string, ueIpv4 string, scs
 	return e
 }
 
-func (e AfEvtHandler) OnFaceDetected(meta util.GvaMeta) error {
-	postRequest := e.client.AsSessionWithQoSAPISubscriptionLevelPOSTOperationApi.ScsAsIdSubscriptionsPost(context.Background(), e.scsAsId)
-	postRequest = postRequest.AsSessionWithQoSSubscription(e.req)
-	_, http_response, err := postRequest.Execute()
-	if err != nil {
-		log.Printf("http_response: %+v, err: %+v", http_response, err)
-		return err
-	}
-	loc := http_response.Header["Location"][0]
-	log.Printf("    %+v created", loc)
-	ls := strings.Split(loc, "/")
-	e.subId = ls[len(ls)-1]
-	return nil
-}
-
-func (e AfEvtHandler) OnDeactivated(inactiveTime uint) error {
-	log.Printf("No object detected for %d secs", inactiveTime)
-	if e.client != nil {
-		log.Println("Fire NEF Del")
-		deleteRequest := e.client.AsSessionWithQoSAPISubscriptionLevelDELETEOperationApi.ScsAsIdSubscriptionsSubscriptionIdDelete(context.Background(), e.scsAsId, e.subId)
-		_, http_response, err := deleteRequest.Execute()
+func (e AfEvtHandler) OnFaceDetected(metaChan chan util.GvaMeta) error {
+	for _ = range metaChan {
+		if e.subId != "" {
+			continue
+		}
+		postRequest := e.client.AsSessionWithQoSAPISubscriptionLevelPOSTOperationApi.ScsAsIdSubscriptionsPost(context.Background(), e.scsAsId)
+		postRequest = postRequest.AsSessionWithQoSSubscription(e.req)
+		_, http_response, err := postRequest.Execute()
 		if err != nil {
 			log.Printf("http_response: %+v, err: %+v", http_response, err)
 			return err
 		}
+		loc := http_response.Header["Location"][0]
+		log.Printf("    %+v created", loc)
+		ls := strings.Split(loc, "/")
+		e.subId = ls[len(ls)-1]
 	}
+	return nil
+}
+
+func (e AfEvtHandler) OnDeactivated() error {
+	log.Println("Fire NEF Del")
+	deleteRequest := e.client.AsSessionWithQoSAPISubscriptionLevelDELETEOperationApi.ScsAsIdSubscriptionsSubscriptionIdDelete(context.Background(), e.scsAsId, e.subId)
+	_, http_response, err := deleteRequest.Execute()
+	if err != nil {
+		log.Printf("http_response: %+v, err: %+v", http_response, err)
+		return err
+	}
+	e.subId = ""
 	return nil
 }
