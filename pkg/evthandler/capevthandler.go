@@ -51,9 +51,16 @@ func (e CapEvtHandler) OnDeactivated() error {
 
 func (e CapEvtHandler) captureOne() (time.Time, error) {
 	t := time.Now()
-	filename := fmt.Sprintf("%s/%s.png", e.captureDir, t.Format("2006-01-02-15-04-05"))
-	cmd := exec.Command("magick", "import", "-window", "gst-launch-1.0", filename)
+	cmd := exec.Command("mkdir", "-p", e.captureDir)
 	err := cmd.Run()
+	if err != nil {
+		log.Println(err)
+		return t, err
+	}
+
+	filename := fmt.Sprintf("%s/%s.png", e.captureDir, t.Format("2006-01-02-15-04-05"))
+	cmd = exec.Command("magick", "import", "-window", "gst-launch-1.0", filename)
+	err = cmd.Run()
 
 	if err != nil {
 		log.Println(err)

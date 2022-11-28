@@ -34,6 +34,16 @@ Lastly run the client to stream the video from the USB camera to the DN:
 $ ./face_detection_and_classification.sh /dev/video0 CPU "host=192.168.250.1 port=9001"
 ```
 
+### Install prerequisite for AF
+
+AF relies on external command `magick` to capture image lively. `magick` can be installed as:
+
+```
+$ wget https://imagemagick.org/archive/binaries/magick
+$ chmod a+x magick
+$ sudo mv magick /usr/local/bin/
+```
+
 ### Run the AF at the server
 
 After the face detection application is running successfully on the 5G network, AF can be run as:
