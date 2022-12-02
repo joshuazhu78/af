@@ -36,7 +36,13 @@ $ ./face_detection_and_classification.sh /dev/video0 CPU "host=192.168.250.1 por
 
 ### Install prerequisite for AF
 
-AF relies on external command `magick` to capture image lively. `magick` can be installed as:
+AF relies on `v4l-utils` and **imagemagic** `magick` to capture image lively. `v4l-utils` can be installed as:
+
+```
+sudo apt update && sudo apt install v4l-utils
+```
+
+And `magick` can be installed as:
 
 ```
 $ wget https://imagemagick.org/archive/binaries/magick
